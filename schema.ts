@@ -40,6 +40,74 @@ import { Lists } from ".keystone/types";
 // We have a users list, a blogs list, and tags for blog posts, so they can be filtered.
 // Each property on the exported object will become the name of a list (a.k.a. the `listKey`),
 // with the value being the definition of the list, including the fields.
+
+const aggriment = list({
+  fields: {
+    title: text(),
+    // Having the status here will make it easy for us to choose whether to display
+    summary: text({
+      ui: {
+        displayMode: "textarea",
+      },
+    }),
+
+    // posts on a live site.
+    status: select({
+      options: [
+        { label: "Published", value: "published" },
+        { label: "Draft", value: "draft" },
+      ],
+      // We want to make sure new posts start off as a draft when they are created
+      defaultValue: "draft",
+      // fields also have the ability to configure their appearance in the Admin UI
+      ui: {
+        displayMode: "segmented-control",
+      },
+    }),
+    // The document field can be used for making highly editable content. Check out our
+    // guide on the document field https://keystonejs.com/docs/guides/document-fields#how-to-use-document-fields
+    // for more information
+    content: document({
+      formatting: true,
+      layouts: [
+        [1, 1],
+        [1, 1, 1],
+        [2, 1],
+        [1, 2],
+        [1, 2, 1],
+      ],
+      links: true,
+      dividers: true,
+    }),
+    publishDate: timestamp(),
+    // Here is the link from post => author.
+    // We've configured its UI display quite a lot to make the experience of editing posts better.
+    author: relationship({
+      ref: "User.aggriments",
+      ui: {
+        displayMode: "select",
+        // cardFields: ["name", "email"],
+        // inlineEdit: { fields: ["name", "email"] },
+        linkToItem: true,
+        // inlineCreate: { fields: ["name", "email"] },
+      },
+    }),
+    // We also link posts to tags. This is a many <=> many linking.
+    tags: relationship({
+      ref: "Tag.aggriment",
+      ui: {
+        displayMode: "cards",
+        cardFields: ["name"],
+        inlineEdit: { fields: ["name"] },
+        linkToItem: true,
+        inlineConnect: true,
+        inlineCreate: { fields: ["name"] },
+      },
+      many: true,
+    }),
+  },
+});
+
 export const lists: Lists = {
   // Here we define the user list.
   User: list({
@@ -59,6 +127,7 @@ export const lists: Lists = {
       // should be referencable by the 'author' field of posts.
       // Make sure you read the docs to understand how they work: https://keystonejs.com/docs/guides/relationships#understanding-relationships
       posts: relationship({ ref: "Post.author", many: true }),
+      aggriments: relationship({ ref: "Aggriment.author", many: true }),
     },
     // Here we can configure the Admin UI. We want to show a user's name and posts in the Admin UI
     ui: {
@@ -137,6 +206,8 @@ export const lists: Lists = {
     fields: {
       name: text(),
       posts: relationship({ ref: "Post.tags", many: true }),
+      aggriment: relationship({ ref: "Aggriment.tags", many: true }),
     },
   }),
+  Aggriment: aggriment,
 };
